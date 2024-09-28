@@ -7,6 +7,7 @@ function App() {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -16,7 +17,7 @@ function App() {
       );
       const resData = await res.json();
       console.log(resData);
-      if (resData[0].Status == "Error") {
+      if (resData[0].Status === "Error" || resData[0].Status === "404") {
         setError("No data found for the entered pincode");
         setData([]);
         setFilteredData([]);
@@ -33,6 +34,11 @@ function App() {
   };
 
   const handleClick = () => {
+    // Pincode validation for exactly 6 digits
+    if (!/^\d{6}$/.test(pincode)) {
+      setError("Please enter a valid 6-digit pincode");
+      return;
+    }
     fetchData();
   };
 
