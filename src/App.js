@@ -4,13 +4,16 @@ function App() {
   const [pincode, setPincode] = useState("");
   const [filterInput, setFilterInput] = useState("");
   const [data, setData] = useState([]);
-  const [fiteredData, setFilteredData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [loading, setLoading] = useState(false); // Loading state
 
   const fetchData = async () => {
+    setLoading(true); // Start loading
     const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
     const resData = await res.json();
     setData(resData[0].PostOffice);
     setFilteredData(resData[0].PostOffice);
+    setLoading(false); // Stop loading
   };
 
   const handleClick = () => {
@@ -26,7 +29,7 @@ function App() {
   };
 
   useEffect(() => {
-    const items = fiteredData.filter((item) =>
+    const items = filteredData.filter((item) =>
       item.Name.toLowerCase().includes(filterInput.toLowerCase())
     );
     setFilteredData(items);
@@ -47,14 +50,21 @@ function App() {
         </button>
       </div>
 
-      {data.length > 1 && (
+      {/* Loader */}
+      {loading && (
+        <div style={appStyles.loaderContainer}>
+          <div className="spinner" style={appStyles.loader}></div>
+        </div>
+      )}
+
+      {!loading && data.length > 1 && (
         <div style={appStyles.resultSection}>
           <p>
             Pincode: <span style={appStyles.highlight}>{pincode}</span>
           </p>
           <p>
             Message: Number of pincode(s) found:{" "}
-            <span style={appStyles.highlight}>{fiteredData.length}</span>
+            <span style={appStyles.highlight}>{filteredData.length}</span>
           </p>
           <input
             type="text"
@@ -65,12 +75,14 @@ function App() {
         </div>
       )}
 
-      <div style={appStyles.grid}>
-        {fiteredData &&
-          fiteredData.map((item) => {
-            return <Pincodes item={item} />;
-          })}
-      </div>
+      {!loading && (
+        <div style={appStyles.grid}>
+          {filteredData &&
+            filteredData.map((item) => {
+              return <Pincodes item={item} key={item.Name} />;
+            })}
+        </div>
+      )}
     </div>
   );
 }
@@ -135,9 +147,6 @@ const appStyles = {
     fontSize: "1rem",
     transition: "background-color 0.3s ease",
   },
-  buttonHover: {
-    backgroundColor: "#0056b3",
-  },
   resultSection: {
     marginBottom: "20px",
   },
@@ -150,7 +159,7 @@ const appStyles = {
     fontSize: "14px",
     border: "1px solid #ddd",
     borderRadius: "5px",
-    width: "200px",
+    width: "100%",
     marginBottom: "20px",
     outline: "none",
   },
@@ -158,6 +167,20 @@ const appStyles = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
     gap: "20px",
+  },
+  loaderContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: "20px",
+  },
+  loader: {
+    border: "4px solid rgba(0, 0, 0, 0.1)",
+    borderLeftColor: "#007bff",
+    borderRadius: "50%",
+    width: "40px",
+    height: "40px",
+    animation: "spin 1s linear infinite",
   },
 };
 
@@ -174,3 +197,13 @@ const pincodeStyles = {
     fontSize: "16px",
   },
 };
+
+// CSS for loader animation
+const styleTag = document.createElement("style");
+styleTag.innerHTML = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+`;
+document.head.appendChild(styleTag);
