@@ -5,15 +5,31 @@ function App() {
   const [filterInput, setFilterInput] = useState("");
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [loading, setLoading] = useState(false); // Loading state
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const fetchData = async () => {
-    setLoading(true); // Start loading
-    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-    const resData = await res.json();
-    setData(resData[0].PostOffice);
-    setFilteredData(resData[0].PostOffice);
-    setLoading(false); // Stop loading
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`
+      );
+      const resData = await res.json();
+      console.log(resData);
+      if (resData[0].Status == "Error") {
+        setError("No data found for the entered pincode");
+        setData([]);
+        setFilteredData([]);
+        return;
+      }
+      setError("");
+      setData(resData[0].PostOffice);
+      setFilteredData(resData[0].PostOffice);
+    } catch (err) {
+      setError("No data found for the entered pincode");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClick = () => {
@@ -50,21 +66,20 @@ function App() {
         </button>
       </div>
 
-      {/* Loader */}
       {loading && (
         <div style={appStyles.loaderContainer}>
           <div className="spinner" style={appStyles.loader}></div>
         </div>
       )}
 
-      {!loading && data.length > 1 && (
+      {!loading && data?.length > 1 && (
         <div style={appStyles.resultSection}>
           <p>
             Pincode: <span style={appStyles.highlight}>{pincode}</span>
           </p>
           <p>
             Message: Number of pincode(s) found:{" "}
-            <span style={appStyles.highlight}>{filteredData.length}</span>
+            <span style={appStyles.highlight}>{filteredData?.length}</span>
           </p>
           <input
             type="text"
@@ -75,14 +90,15 @@ function App() {
         </div>
       )}
 
-      {!loading && (
+      {!loading && !error && (
         <div style={appStyles.grid}>
           {filteredData &&
-            filteredData.map((item) => {
+            filteredData?.map((item) => {
               return <Pincodes item={item} key={item.Name} />;
             })}
         </div>
       )}
+      {error && <h1>{error}</h1>}
     </div>
   );
 }
